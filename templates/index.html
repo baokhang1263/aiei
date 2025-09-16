@@ -10,6 +10,7 @@
       {% endfor %}
     </ul>
   </aside>
+
   <section class="chat">
     <div id="messages" class="messages"></div>
     <form id="chat-form" class="chat-form">
@@ -18,12 +19,15 @@
     </form>
   </section>
 </div>
-<script>window.__INITIAL__ = { defaultRoom: 'general' };</script>
+
+<!-- GỬI username xuống JS -->
 <script>
   window.__INITIAL__ = {
     defaultRoom: 'general',
     username: "{{ username or '' }}"
-  }
+  };
 </script>
-<script src="{{ url_for('static', filename='main.js') }}"></script>
+
+<!-- cache-busting CSS nếu bạn link trong base.html, thêm ?v=3 -->
+<script src="{{ url_for('static', filename='main.js') }}?v=3"></script>
 {% endblock %}
