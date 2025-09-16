@@ -43,18 +43,32 @@ form.addEventListener("submit", (e) => {
 });
 
 // Hàm thêm tin nhắn vào khung chat
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
 function addMessage(username, text, created_at) {
   const messages = document.getElementById("messages");
   const div = document.createElement("div");
 
-  const ts = created_at
-    ? new Date(created_at).toLocaleTimeString()
-    : new Date().toLocaleTimeString();
+  const ts = created_at ? new Date(created_at).toLocaleTimeString() : new Date().toLocaleTimeString();
 
-  div.innerHTML = `<strong>${username}:</strong> ${text} <span class="time">· ${ts}</span>`;
+  // gắn class theo user để CSS tô màu
+  let cls = "msg";
+  if (username === "ai") cls += " ai";
+  else if (username === "ei") cls += " ei";
+  else cls += " other";
+
+  div.className = cls;
+  div.innerHTML =
+    `<span class="author">${escapeHtml(username)}:</span> ` +
+    `<span class="text">${escapeHtml(text)}</span>` +
+    `<span class="time"> · ${ts}</span>`;
+
   messages.appendChild(div);
   messages.scrollTop = messages.scrollHeight;
 }
+
 
 // Hàm thêm thông báo hệ thống
 function addSystemMessage(text) {
