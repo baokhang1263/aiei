@@ -1,84 +1,96 @@
+// static/main.js
 document.addEventListener("DOMContentLoaded", () => {
-  const CURRENT_USER = (window.__INITIAL__ && window.__INITIAL__.username) || "Guest";
+  const USER = (window.__INITIAL__ && window.__INITIAL__.username) || "Guest";
   const DEFAULT_ROOM = (window.__INITIAL__ && window.__INITIAL__.defaultRoom) || "general";
 
-  // Gửi username qua auth để server lưu trong phiên socket
- const socket = io({
-  path: "/socket.io/",
-  transports: ["websocket", "polling"],
-  auth: { username: (window.__INITIAL__?.username) || "Guest" }
-});
+  // PHẢI có socket.io client trước file này
+  if (typeof io !== "function") {
+    console.error("Socket.IO client chưa load (io is not defined). Kiểm tra <script src='https://cdn.socket.io/4.7.5/socket.io.min.js'> trong base.html");
+    return;
+  }
 
+  // Kết nối + gửi username qua auth
+  const socket = io({
+    path: "/socket.io/",
+    transports: ["websocket", "polling"],
+    auth: { username: USER }
+  });
 
-  const messages = document.getElementById("messages");
-  const form = document.getElementById("chat-form");
-  const input = document.getElementById("message-input");
-  const roomButtons = document.querySelectorAll(".room-btn");
+  const elMessages = document.getElementById("messages");
+  const elForm = document.getElementById("chat-form");
+  const elInput = document.getElementById("message-input");
+  const roomBtns = document.querySelectorAll(".room-btn");
 
   let currentRoom = DEFAULT_ROOM;
 
   socket.on("connect", () => {
-    socket.emit("join", { room: currentRoom }); // KHÔNG gửi username ở đây nữa
+    console.log("[client] connected", socket.id, "as", USER);
+    socket.emit("join", { room: currentRoom });
   });
 
-  // --- NHẬN TIN NHẮN (chuẩn: username, text, created_at) ---
+  socket.on("disconnect", (reason) => {
+    console.warn("[client] disconnected:", reason);
+  });
+
+  // Server phát event 'system' cho join/leave
+  socket.on("system", (data) => {
+    addSystemMessage(data?.text || "");
+  });
+
+  // Server phát event 'message' với {username, text, created_at}
   socket.on("message", (data) => {
-    // Hỗ trợ luôn trường hợp cũ (msg/time) nếu còn rơi rớt
-    const username = data.username || "Guest";
-    const text = data.text ?? data.msg ?? "";
-    const createdAt = data.created_at ?? data.time ?? new Date().toISOString();
+    console.log("[client] on message:", data);
+    const username = data?.username || "Guest";
+    const text = data?.text ?? data?.msg ?? "";
+    const createdAt = data?.created_at ?? data?.time ?? new Date().toISOString();
     addMessage(username, text, createdAt);
   });
 
-  // --- THÔNG BÁO HỆ THỐNG ---
-  socket.on("system", (data) => addSystemMessage(data.text || ""));
-
-  // --- GỬI TIN: chuẩn {room, text} ---
-  form.addEventListener("submit", (e) => {
+  // Gửi tin
+  elForm.addEventListener("submit", (e) => {
     e.preventDefault();
-    const text = (input.value || "").trim();
+    const text = (elInput.value || "").trim();
     if (!text) return;
-    socket.emit("message", { room: currentRoom, text }); // <-- text (không phải msg)
-    input.value = "";
+    console.log("[client] emit message:", { room: currentRoom, text });
+    socket.emit("message", { room: currentRoom, text });
+    elInput.value = "";
+    elInput.focus();
   });
 
-  // --- CHUYỂN PHÒNG ---
-  roomButtons.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const newRoom = btn.dataset.room;
-      if (newRoom && newRoom !== currentRoom) {
-        socket.emit("leave", { room: currentRoom });
-        currentRoom = newRoom;
-        messages.innerHTML = "";
-        socket.emit("join", { room: currentRoom });
-      }
+  // Đổi phòng
+  roomBtns.forEach((b) => {
+    b.addEventListener("click", () => {
+      const newRoom = b.dataset.room;
+      if (!newRoom || newRoom === currentRoom) return;
+      console.log("[client] change room:", currentRoom, "->", newRoom);
+      socket.emit("leave", { room: currentRoom });
+      currentRoom = newRoom;
+      elMessages.innerHTML = "";
+      socket.emit("join", { room: currentRoom });
     });
   });
 
   // ===== helpers =====
-  function escapeHtml(s) {
-    return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   }
   function addMessage(username, text, created_at) {
-    const div = document.createElement("div");
+    const d = document.createElement("div");
     const ts = new Date(created_at).toLocaleTimeString();
     let cls = "msg";
     if (username === "ai") cls += " ai";
     else if (username === "ei") cls += " ei";
     else cls += " other";
-    div.className = cls;
-    div.innerHTML =
-      `<span class="author">${escapeHtml(username)}:</span> ` +
-      `<span class="text">${escapeHtml(text)}</span>` +
-      `<span class="time"> · ${ts}</span>`;
-    messages.appendChild(div);
-    messages.scrollTop = messages.scrollHeight;
+    d.className = cls;
+    d.innerHTML = `<span class="author">${esc(username)}:</span> <span class="text">${esc(text)}</span><span class="time"> · ${ts}</span>`;
+    elMessages.appendChild(d);
+    elMessages.scrollTop = elMessages.scrollHeight;
   }
   function addSystemMessage(text) {
-    const div = document.createElement("div");
-    div.className = "system";
-    div.textContent = text;
-    messages.appendChild(div);
-    messages.scrollTop = messages.scrollHeight;
+    const d = document.createElement("div");
+    d.className = "system";
+    d.textContent = text;
+    elMessages.appendChild(d);
+    elMessages.scrollTop = elMessages.scrollHeight;
   }
 });
