@@ -22,10 +22,18 @@ def to_psycopg3_url(url: str) -> str:
         return "postgresql+psycopg://" + url[len("postgres://"):]
     if url.startswith("postgresql://") and "+psycopg" not in url:
         return "postgresql+psycopg://" + url[len("postgresql://"):]
-    return url
+    return url  # đã chuẩn hoặc sqlite://
 
 raw_url = os.environ.get("DATABASE_URL", "sqlite:///chat.db")
-app.config["SQLALCHEMY_DATABASE_URI"] = to_psycopg3_url(raw_url)
+db_url = to_psycopg3_url(raw_url)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = db_url
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+    "pool_pre_ping": True,
+    "pool_size": 5,
+    "max_overflow": 5,
+}
 
 # (nếu Render yêu cầu SSL mà URL chưa có, có thể thêm dòng sau)
 # if db_url.startswith("postgresql+psycopg://") and "sslmode=" not in db_url:
