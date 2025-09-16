@@ -3,7 +3,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const DEFAULT_ROOM = (window.__INITIAL__ && window.__INITIAL__.defaultRoom) || "general";
 
   // Gửi username qua auth để server lưu trong phiên socket
-  const socket = io({ auth: { username: CURRENT_USER } });
+ const socket = io({
+  path: "/socket.io/",
+  transports: ["websocket", "polling"],
+  auth: { username: (window.__INITIAL__?.username) || "Guest" }
+});
+
 
   const messages = document.getElementById("messages");
   const form = document.getElementById("chat-form");
