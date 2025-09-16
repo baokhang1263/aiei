@@ -57,7 +57,7 @@ def index():
     if not current_user():
         return redirect(url_for('login'))
     rooms = ['general', 'random', 'tech']
-    return render_template('index.html', rooms=rooms)
+    return render_template('index.html', rooms=rooms, username=session.get('username'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
