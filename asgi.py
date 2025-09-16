@@ -4,7 +4,7 @@ import socketio
 from datetime import datetime
 from asgiref.wsgi import WsgiToAsgi
 
-from app import app as flask_app, db, Message
+from app import app as flask_app   # import Flask app từ app.py
 
 sio = socketio.AsyncServer(
     async_mode="asgi",
@@ -12,7 +12,14 @@ sio = socketio.AsyncServer(
     ping_interval=20,
     ping_timeout=60,
 )
-asgi_app = socketio.ASGIApp(sio, other_asgi_app=flask_asgi)  # không set 'socketio_path'
+
+# Gắn Flask app vào ASGI wrapper
+asgi_app = socketio.ASGIApp(sio, flask_app)
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("asgi:asgi_app", host="0.0.0.0", port=5000)
+
 
 # Bọc Flask (WSGI) vào ASGI và ghép với Socket.IO
 flask_asgi = WsgiToAsgi(flask_app)
