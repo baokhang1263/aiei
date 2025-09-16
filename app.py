@@ -182,6 +182,36 @@ def list_users_cmd():
     for u in users:
         status = 'active' if u.is_active else 'inactive'
         print(f'{u.username}  -  {status}  -  {u.created_at.isoformat()}')
+# ==== ONE-TIME BOOTSTRAP ROUTE (xóa sau khi chạy xong) ====
+import os
+from flask import request
+
+@app.route("/__init_users")
+def __init_users():
+    # bảo vệ bằng token để người lạ không gọi bừa
+    token = request.args.get("token", "")
+    expected = os.environ.get("BOOTSTRAP_TOKEN")
+    if not expected or token != expected:
+        return "forbidden", 403
+
+    created = []
+
+    def ensure_user(u, p):
+        if not User.query.filter_by(username=u).first():
+            user = User(username=u)
+            user.set_password(p)
+            db.session.add(user)
+            created.append(u)
+
+    # tạo 2 user bạn yêu cầu
+    ensure_user("ei", "eiei")
+    ensure_user("ai", "aiai")
+    db.session.commit()
+
+    if created:
+        return f"created: {', '.join(created)}"
+    return "no-op (users already exist)"
+# ==== END BOOTSTRAP ROUTE ====
 
 if __name__ == '__main__':
     with app.app_context():
