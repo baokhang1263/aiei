@@ -13,6 +13,7 @@ app = Flask(__name__)
 # Secret key để bảo mật session
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-change-me')
 
+
 # --- Chuẩn hoá DATABASE_URL để dùng psycopg v3 ---
 def to_psycopg3_url(url: str) -> str:
     if not url:
@@ -21,10 +22,10 @@ def to_psycopg3_url(url: str) -> str:
         return "postgresql+psycopg://" + url[len("postgres://"):]
     if url.startswith("postgresql://") and "+psycopg" not in url:
         return "postgresql+psycopg://" + url[len("postgresql://"):]
-    return url  # đã chuẩn hoặc sqlite://
+    return url
 
 raw_url = os.environ.get("DATABASE_URL", "sqlite:///chat.db")
-db_url = to_psycopg3_url(raw_url)
+app.config["SQLALCHEMY_DATABASE_URI"] = to_psycopg3_url(raw_url)
 
 # (nếu Render yêu cầu SSL mà URL chưa có, có thể thêm dòng sau)
 # if db_url.startswith("postgresql+psycopg://") and "sslmode=" not in db_url:
