@@ -18,7 +18,6 @@
     </form>
   </section>
 </div>
-<script src="{{ url_for('static', filename='main.js') }}"></script>
 <script>window.__INITIAL__ = { defaultRoom: 'general' };</script>
 <script>
   window.__INITIAL__ = {
@@ -26,5 +25,5 @@
     username: "{{ username or '' }}"
   }
 </script>
-
+<script src="{{ url_for('static', filename='main.js') }}"></script>
 {% endblock %}
