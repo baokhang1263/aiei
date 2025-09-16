@@ -23,39 +23,22 @@ body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Aria
 .chat-form{display:flex;gap:8px;padding:16px;border-top:1px solid #1f2937}
 .chat-form input{flex:1;padding:12px;border-radius:12px;border:1px solid #334155;background:#0b1222;color:var(--text)}
 .chat-form button{padding:12px 16px;border-radius:12px;border:none;background:var(--accent);color:#0b1020;font-weight:700;cursor:pointer}
-/* Giảm khoảng cách dòng + thu hẹp khoảng trống */
-#messages {
-  line-height: 1.25;          /* nhỏ hơn mặc định */
-}
-.msg { 
-  margin: 4px 0;               /* trước có thể đang ~12px -> giảm còn 4px */
-  font-size: 15px;
-}
-.msg .author { 
-  font-weight: 700;
-}
-.msg .time {
-  opacity: 0.6;
-  font-size: 12px;
-  margin-left: 4px;
-}
+/* ===== Chat spacing gọn lại ===== */
+#messages { line-height: 1.18; }            /* giảm line-height */
+.msg      { margin: 2px 0; padding: 2px 0; font-size: 15px; }
+.system   { margin: 4px 0; font-size: 14px; color: #9aa7b0; font-style: italic; }
 
-/* Màu theo tài khoản */
-.msg.ai .text {
-  color: #42a5ff;              /* xanh dễ nhìn cho ai */
-}
-.msg.ei .text {
-  color: #ffffff;              /* trắng cho ei */
-}
-.msg.other .text {
-  color: #cfd8dc;              /* xám nhạt cho user khác/Guest */
-}
+.msg .author { font-weight: 700; }
+.msg .time   { opacity: .6; font-size: 12px; margin-left: 4px; }
 
-/* Dòng hệ thống gọn hơn */
-.system {
-  font-style: italic;
-  color: #9aa7b0;
-  margin: 4px 0;
-  font-size: 14px;
-}
+/* ===== Màu theo tài khoản ===== */
+/* tô cả dòng theo user (ưu tiên cao) */
+.msg.ai { color: #42a5ff !important; }      /* ai = xanh */
+.msg.ei { color: #ffffff !important; }      /* ei = trắng */
 
+/* fallback nếu bạn chỉ muốn phần nội dung đổi màu */
+.msg.ai .text { color: #42a5ff !important; }
+.msg.ei .text { color: #ffffff !important; }
+
+/* user khác / Guest nhẹ màu hơn */
+.msg.other .text { color: #cfd8dc; }
