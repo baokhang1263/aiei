@@ -1,5 +1,6 @@
 (function(){
-  const socket = io();
+  // Trước đây: const socket = io();
+  const socket = io({ auth: { username: (window.__INITIAL__ && window.__INITIAL__.username) || "Guest" } });
   let currentRoom = (window.__INITIAL__ && window.__INITIAL__.defaultRoom) || 'general';
   const messagesEl = document.getElementById('messages');
   const form = document.getElementById('chat-form');
