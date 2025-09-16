@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Phòng chat - Chat nội bộ{% endblock %}
+{% block content %}
+<div class="layout">
+  <aside class="sidebar">
+    <h3>Kênh</h3>
+    <ul id="room-list">
+      {% for r in rooms %}
+        <li><button class="room-btn" data-room="{{ r }}"># {{ r }}</button></li>
+      {% endfor %}
+    </ul>
+  </aside>
+  <section class="chat">
+    <div id="messages" class="messages"></div>
+    <form id="chat-form" class="chat-form">
+      <input id="message-input" placeholder="Nhập tin nhắn..." autocomplete="off">
+      <button type="submit">Gửi</button>
+    </form>
+  </section>
+</div>
+<script src="{{ url_for('static', filename='main.js') }}"></script>
+<script>window.__INITIAL__ = { defaultRoom: 'general' };</script>
+{% endblock %}
