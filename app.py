@@ -212,6 +212,32 @@ def __init_users():
         return f"created: {', '.join(created)}"
     return "no-op (users already exist)"
 # ==== END BOOTSTRAP ROUTE ====
+# ==== ONE-TIME PASSWORD RESET (delete after use) ====
+from flask import request
+
+@app.route("/__set_pw")
+def __set_pw():
+    token = request.args.get("token", "")
+    expected = os.environ.get("BOOTSTRAP_TOKEN")
+    if not expected or token != expected:
+        return "forbidden", 403
+
+    u = request.args.get("u", "").strip()
+    p = request.args.get("p", "").strip()
+    if not u or not p:
+        return "missing u or p", 400
+
+    user = User.query.filter_by(username=u).first()
+    if not user:
+        # nếu chưa có thì tạo mới
+        user = User(username=u, is_active=True)
+        db.session.add(user)
+
+    user.is_active = True
+    user.set_password(p)
+    db.session.commit()
+    return f"ok: set password for {u}"
+# ==== END ONE-TIME PASSWORD RESET ====
 
 if __name__ == '__main__':
     with app.app_context():
