@@ -1,24 +1,26 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}{% endblock %}</title>
-  <!-- Load CSS với version để tránh cache -->
+  <meta charset="utf-8">
+  <title>{% block title %}Chat nội bộ{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- CSS chính -->
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=3">
 </head>
 <body>
-  <header>
-    <nav>
-      {% if current_user.is_authenticated %}
-        👤 {{ current_user.username }}
-        | <a href="{{ url_for('logout') }}">Đăng xuất</a>
+  <!-- Thanh header -->
+  <nav style="padding:8px 12px; background:#2b2b2b; color:#eee; display:flex; justify-content:space-between; align-items:center;">
+    <div><strong>💬 Chat nội bộ</strong></div>
+    <div>
+      {% if username %}
+        👤 {{ username }} · <a href="{{ url_for('logout') }}" style="color:#00c8ff; text-decoration:none;">Đăng xuất</a>
       {% else %}
-        <a href="{{ url_for('login') }}">Đăng nhập</a>
+        <a href="{{ url_for('login') }}" style="color:#00c8ff; text-decoration:none;">Đăng nhập</a>
       {% endif %}
-    </nav>
-  </header>
+    </div>
+  </nav>
 
+  <!-- Nội dung chính -->
   <main>
     {% block content %}{% endblock %}
   </main>
