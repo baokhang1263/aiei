@@ -6,13 +6,13 @@ from flask import Flask, render_template, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+from flask import request, jsonify
 
 # --- Flask Config ---
 app = Flask(__name__)
 
 # Secret key để bảo mật session
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-change-me')
-
 
 # --- Chuẩn hoá DATABASE_URL để dùng psycopg v3 ---
 def to_psycopg3_url(url: str) -> str:
@@ -89,6 +89,17 @@ def add_cache_headers(resp):
     return resp
 
 # --- Routes ---
+@app.route("/__dbinfo")
+def __dbinfo():
+    token = request.args.get("token", "")
+    expected = os.environ.get("BOOTSTRAP_TOKEN")
+    if not expected or token != expected: return "forbidden", 403
+    return jsonify({
+        "dialect": db.engine.dialect.name,   # mong đợi: postgresql
+        "driver": db.engine.dialect.driver,  # mong đợi: psycopg
+        "url": str(db.engine.url).split("?")[0]
+    })
+
 @app.route("/", methods=["GET"])
 def index():
     if not current_user():
