@@ -26,11 +26,8 @@
     {% block content %}{% endblock %}
   </main>
 
-<!-- Socket.IO client (do server python-socketio phục vụ) -->
-<script src="/socket.io/socket.io.js"></script>
-<script src="{{ url_for('static', filename='main.js') }}?v=5"></script>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script src="{{ url_for('static', filename='main.js') }}?v=7"></script>
 
-  <!-- Script chính của bạn -->
-  <script src="{{ url_for('static', filename='main.js') }}?v=4"></script>
 </body>
 </html>
