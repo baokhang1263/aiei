@@ -1,24 +1,26 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="vi">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}Chat nội bộ{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
-  </head>
-  <body>
-    <header class="topbar">
-      <div class="brand">💬 Internal Chat</div>
-      <nav>
-        {% if session.get('username') %}
-          <span>👤 {{ session.get('username') }}</span>
-          <a href="{{ url_for('logout') }}">Đăng xuất</a>
-        {% endif %}
-      </nav>
-    </header>
-    <main>
-      {% block content %}{% endblock %}
-    </main>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{% endblock %}</title>
+  <!-- Load CSS với version để tránh cache -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=3">
+</head>
+<body>
+  <header>
+    <nav>
+      {% if current_user.is_authenticated %}
+        👤 {{ current_user.username }}
+        | <a href="{{ url_for('logout') }}">Đăng xuất</a>
+      {% else %}
+        <a href="{{ url_for('login') }}">Đăng nhập</a>
+      {% endif %}
+    </nav>
+  </header>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</body>
 </html>
