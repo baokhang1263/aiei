@@ -6,13 +6,13 @@ from asgiref.wsgi import WsgiToAsgi
 
 from app import app as flask_app, db, Message
 
-# Socket.IO server ở chế độ ASGI
 sio = socketio.AsyncServer(
     async_mode="asgi",
     cors_allowed_origins="*",
     ping_interval=20,
     ping_timeout=60,
 )
+asgi_app = socketio.ASGIApp(sio, other_asgi_app=flask_asgi)  # không set 'socketio_path'
 
 # Bọc Flask (WSGI) vào ASGI và ghép với Socket.IO
 flask_asgi = WsgiToAsgi(flask_app)
