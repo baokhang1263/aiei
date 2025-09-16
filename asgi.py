@@ -2,9 +2,9 @@
 import asyncio
 import socketio
 from asgiref.wsgi import WsgiToAsgi
+from datetime import datetime
 
-# Import Flask app + DB models từ app.py (giữ nguyên app.py của bạn)
-from app import app, db, Message
+from app import app, db, Message  # import Flask app & models
 
 # Tạo Async Socket.IO server (ASGI)
 sio = socketio.AsyncServer(
@@ -19,16 +19,14 @@ sio = socketio.AsyncServer(
 # Bọc Flask (WSGI) thành ASGI
 flask_asgi = WsgiToAsgi(app)
 
-# Gộp vào một ASGI app duy nhất
+# Hợp nhất thành 1 ASGI app
 app = socketio.ASGIApp(sio, other_asgi_app=flask_asgi)
 
-# === Socket.IO events ===
-# Client sẽ connect với auth: { username: "..." }
+# ===== Socket.IO events =====
 @sio.event
 async def connect(sid, environ, auth):
     username = (auth or {}).get("username") or "Guest"
     sio.save_session(sid, {"username": username})
-    # Không broadcast ở connect; chỉ khi join room
 
 @sio.event
 async def join(sid, data):
@@ -55,12 +53,9 @@ async def message(sid, data):
     session = await sio.get_session(sid)
     username = session.get("username", "Guest")
 
-    # Ghi DB (SQLAlchemy sync) trong thread để không block event loop
-    from datetime import datetime
     def write_msg():
         m = Message(room=room, username=username, text=text, created_at=datetime.utcnow())
-        db.session.add(m)
-        db.session.commit()
+        db.session.add(m); db.session.commit()
         return m.created_at
 
     created_at = await asyncio.to_thread(write_msg)
@@ -68,5 +63,4 @@ async def message(sid, data):
 
 @sio.event
 async def disconnect(sid):
-    # có thể dọn session nếu cần
     pass
