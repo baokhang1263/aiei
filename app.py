@@ -18,6 +18,10 @@ app.config['SESSION_COOKIE_SAMESITE'] = os.environ.get('SESSION_COOKIE_SAMESITE'
 app.config['SESSION_COOKIE_SECURE'] = os.environ.get('SESSION_COOKIE_SECURE', 'False').lower() == 'true'
 
 db = SQLAlchemy(app)
+# Tự tạo bảng nếu chưa có (an toàn gọi nhiều lần)
+with app.app_context():
+    db.create_all()
+
 
 # --- Models ---
 class User(db.Model):
