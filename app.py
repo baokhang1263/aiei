@@ -63,6 +63,32 @@ def __dbinfo():
         "url": str(db.engine.url).split("?")[0]
     })
 
+# --- BOOTSTRAP: tạo/đặt lại mật khẩu (xóa sau khi dùng) ---
+from flask import request
+
+@app.route("/__set_pw")
+def __set_pw():
+    token = request.args.get("token", "")
+    expected = os.environ.get("BOOTSTRAP_TOKEN")
+    if not expected or token != expected:
+        return "forbidden", 403
+
+    u = (request.args.get("u") or "").strip()
+    p = (request.args.get("p") or "").strip()
+    if not u or not p:
+        return "missing u or p", 400
+
+    user = User.query.filter_by(username=u).first()
+    if not user:
+        user = User(username=u, is_active=True)
+        db.session.add(user)
+
+    user.is_active = True
+    user.set_password(p)
+    db.session.commit()
+    return f"ok: set password for {u}"
+# --- END BOOTSTRAP ---
+
 
 # --- Models ---
 class User(db.Model):
