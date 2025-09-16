@@ -1,53 +1,67 @@
-(function(){
-  // Trước đây: const socket = io();
-  const socket = io({ auth: { username: (window.__INITIAL__ && window.__INITIAL__.username) || "Guest" } });
-  let currentRoom = (window.__INITIAL__ && window.__INITIAL__.defaultRoom) || 'general';
-  const messagesEl = document.getElementById('messages');
-  const form = document.getElementById('chat-form');
-  const input = document.getElementById('message-input');
-  const roomButtons = document.querySelectorAll('.room-btn');
+// static/main.js
 
-  function appendSystem(text){
-    const div = document.createElement('div');
-    div.className = 'msg system';
-    div.textContent = text;
-    messagesEl.appendChild(div);
-    messagesEl.scrollTop = messagesEl.scrollHeight;
-  }
-  function appendMessage(username, text, time){
-    const div = document.createElement('div');
-    div.className = 'msg';
-    const who = document.createElement('strong');
-    who.textContent = username + ': ';
-    const content = document.createElement('span');
-    content.textContent = text;
-    const meta = document.createElement('span');
-    meta.className = 'meta';
-    meta.textContent = time ? '  ·  ' + new Date(time).toLocaleTimeString() : '';
-    div.appendChild(who); div.appendChild(content); div.appendChild(meta);
-    messagesEl.appendChild(div);
-    messagesEl.scrollTop = messagesEl.scrollHeight;
-  }
-  function fetchHistory(room){
-    fetch('/history/' + room).then(r => r.json()).then(data => {
-      messagesEl.innerHTML = '';
-      (data.messages || []).forEach(m => appendMessage(m.username, m.text, m.created_at));
-    });
-  }
-  function join(room){
-    currentRoom && socket.emit('leave', {room: currentRoom});
-    currentRoom = room; appendSystem('Đã chuyển sang #' + room);
-    fetchHistory(room); socket.emit('join', {room});
-  }
-  socket.on('connect', function(){ join(currentRoom); });
-  socket.on('system', function(payload){ appendSystem(payload.text); });
-  socket.on('message', function(payload){ appendMessage(payload.username, payload.text, payload.created_at); });
-  form.addEventListener('submit', function(e){
-    e.preventDefault();
-    const text = (input.value || '').trim();
-    if (!text) return;
-    socket.emit('message', {room: currentRoom, text});
-    input.value = '';
-  });
-  roomButtons.forEach(btn => btn.addEventListener('click', () => join(btn.dataset.room)));
-})();
+// Lấy username render từ Flask (đã được set trong index.html)
+const CURRENT_USER =
+  (window.__INITIAL__ && window.__INITIAL__.username)
+    ? window.__INITIAL__.username
+    : "Guest";
+
+// Kết nối Socket.IO, gửi username qua auth
+const socket = io({
+  auth: { username: CURRENT_USER }
+});
+
+// Khi kết nối thành công → join vào phòng mặc định
+socket.on("connect", () => {
+  const room =
+    (window.__INITIAL__ && window.__INITIAL__.defaultRoom)
+      ? window.__INITIAL__.defaultRoom
+      : "general";
+  socket.emit("join", { room: room });
+});
+
+// Khi nhận tin nhắn từ server
+socket.on("message", (data) => {
+  addMessage(data.username, data.text, data.created_at);
+});
+
+// Khi nhận thông báo hệ thống (ai vào/ra phòng)
+socket.on("system", (data) => {
+  addSystemMessage(data.text);
+});
+
+// Gửi tin nhắn từ form
+const form = document.getElementById("chat-form");
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const input = document.getElementById("message");
+  const text = (input.value || "").trim();
+  if (!text) return;
+
+  socket.emit("message", { room: "general", text: text });
+  input.value = "";
+});
+
+// Hàm thêm tin nhắn vào khung chat
+function addMessage(username, text, created_at) {
+  const messages = document.getElementById("messages");
+  const div = document.createElement("div");
+
+  const ts = created_at
+    ? new Date(created_at).toLocaleTimeString()
+    : new Date().toLocaleTimeString();
+
+  div.innerHTML = `<strong>${username}:</strong> ${text} <span class="time">· ${ts}</span>`;
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+// Hàm thêm thông báo hệ thống
+function addSystemMessage(text) {
+  const messages = document.getElementById("messages");
+  const div = document.createElement("div");
+  div.className = "system";
+  div.innerText = text;
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+}
